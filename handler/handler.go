@@ -30,6 +30,11 @@ func CreateShortUrl(c *gin.Context) {
 
 func HandleShortUrlRedirect(c *gin.Context) {
 	shortUrl := c.Param("shortUrl")
+	// BLOOM FILTER CHECK FIRST
+	if !store.GetStoreService().Filter.Test([]byte(shortUrl)) {
+		c.JSON(http.StatusNotFound, gin.H{"message": "URL definitely does not exist (Bloom Filter Blocked)"})
+		return
+	}
 	initialUrl := store.RetrieveInitialUrl(shortUrl)
 	// If the URL isn't found in Redis
 	if initialUrl == "" {
